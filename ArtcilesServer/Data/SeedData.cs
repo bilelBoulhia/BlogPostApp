@@ -174,8 +174,8 @@ namespace ArtcilesServer.Data
             {
                
                 ArticleTitle = "Getting Started with EF Core",
-                ArticleCreatedAt = DateOnly.FromDateTime(DateTime.Now.AddDays(-10)),
-                ArticleModifiedAt = DateOnly.FromDateTime(DateTime.Now.AddDays(-5)),
+                ArticleCreatedAt = DateTime.Now.AddDays(-10),
+                ArticleModifiedAt = DateTime.Now.AddDays(-5),
                 ArticleContent = "This article introduces Entity Framework Core and its features.",
                 UserId = 1,
                 CategoryId = 1
@@ -184,8 +184,8 @@ namespace ArtcilesServer.Data
             {
                 
                 ArticleTitle = "Mastering LINQ Queries",
-                ArticleCreatedAt = DateOnly.FromDateTime(DateTime.Now.AddDays(-8)),
-                ArticleModifiedAt = DateOnly.FromDateTime(DateTime.Now.AddDays(-4)),
+                ArticleCreatedAt = DateTime.Now.AddDays(-8),
+                ArticleModifiedAt = DateTime.Now.AddDays(-4),
                 ArticleContent = "A comprehensive guide to writing efficient LINQ queries in C#.",
                 UserId = 2,
                 CategoryId = 2
@@ -194,8 +194,8 @@ namespace ArtcilesServer.Data
             {
                
                 ArticleTitle = "Building Relationships in EF Core",
-                ArticleCreatedAt = DateOnly.FromDateTime(DateTime.Now.AddDays(-6)),
-                ArticleModifiedAt = DateOnly.FromDateTime(DateTime.Now.AddDays(-2)),
+                ArticleCreatedAt = DateTime.Now.AddDays(-6),
+                ArticleModifiedAt = DateTime.Now.AddDays(-2),
                 ArticleContent = "Learn how to manage relationships between entities effectively.",
                 UserId = 3,
                 CategoryId = 3
@@ -204,8 +204,8 @@ namespace ArtcilesServer.Data
             {
                
                 ArticleTitle = "Optimizing EF Core Performance",
-                ArticleCreatedAt = DateOnly.FromDateTime(DateTime.Now.AddDays(-12)),
-                ArticleModifiedAt = DateOnly.FromDateTime(DateTime.Now.AddDays(-7)),
+                ArticleCreatedAt = DateTime.Now.AddDays(-12),
+                ArticleModifiedAt = DateTime.Now.AddDays(-7),
                 ArticleContent = "Best practices for optimizing performance when using EF Core.",
                 UserId = 1,
                 CategoryId = 4

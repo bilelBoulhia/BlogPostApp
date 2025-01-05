@@ -8,7 +8,7 @@ namespace ArtcilesServer.Repos
         Task<ICollection<User>> SearchAsync(string searchQuery);
         Task<ICollection<FollowerDTO>> GetUserFollowing(int userId);
 
-        
+        Task<User> login(LoginDTO loginCreditianls);
 
     }
 }

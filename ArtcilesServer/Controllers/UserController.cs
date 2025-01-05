@@ -3,12 +3,14 @@ using ArtcilesServer.Interfaces;
 using ArtcilesServer.Models;
 using ArtcilesServer.Repo;
 using ArtcilesServer.Services;
+using ArticlesServer.Services;
 using AutoMapper;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArtcilesServer.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
@@ -21,19 +23,21 @@ namespace ArtcilesServer.Controllers
         private readonly UserRepo _userRepo;
         private readonly GenericRepository<User> _userAction;
         private readonly HashPassword _hashPassword;
-
-        public UserController(IMapper mapper, GenericRepository<User> userActions,UserRepo userRepo,HashPassword hashPassword)
+        private readonly AuthService _authService;
+        public UserController(IMapper mapper,AuthService authService ,GenericRepository<User> userActions,UserRepo userRepo,HashPassword hashPassword)
         {
 
             _hashPassword = hashPassword;
             _userRepo = userRepo;
             _mapper = mapper;
             _userAction = userActions;
+            _authService = authService;
 
         }
 
 
         #region Post actions
+        [AllowAnonymous]
         [HttpPost("CreateAccount")]
         public async Task<IActionResult> CreateAccount([FromBody] UserDTO user)
         {
@@ -56,13 +60,58 @@ namespace ArtcilesServer.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while creating the employee: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred : {ex.Message}");
             }
         }
 
 
+        [AllowAnonymous]
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login([FromBody] LoginDTO login)
+        {
+            try
+            {
+                Console.WriteLine("hey");
+                
+                 var user = await  _userRepo.login(login);
+
+
+                if (user == null)
+                    return Unauthorized();
+
+                var token = _authService.GenerateToken(user);
+                return Ok(new { token });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred : {ex.Message}");
+            }
+        }
+
+
+
+
+
+
+
+
         #endregion
         #region Get actions
+
+        [Authorize]
+        [HttpGet("CheckAuth")]
+        public async Task<IActionResult> CheckAuth()
+        {
+            var claims = User.Claims.Select(c => new { c.Type, c.Value });
+            return Ok(new
+            {
+                Message = "Auth working!",
+                Username = User.Identity.Name,
+                Claims = claims
+            });
+        }
+
+
         [HttpGet("GetAllAccounts")]
         public async Task<IActionResult> GettAllAccounts()
         {

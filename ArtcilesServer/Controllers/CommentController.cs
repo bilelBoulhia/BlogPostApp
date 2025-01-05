@@ -2,11 +2,13 @@
 using ArtcilesServer.Models;
 using ArtcilesServer.Repo;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArtcilesServer.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CommentController : ControllerBase
@@ -92,6 +94,41 @@ namespace ArtcilesServer.Controllers
 
         }
 
+        [HttpGet("GetAllLikesOfaComment")]
+        public async Task<IActionResult> GetAllLikesOfaComment([FromQuery] int commentId)
+        {
+            try
+            {
+
+                var Result = await _commentRepo.getAllLikesOfaComment(commentId);
+
+                if (Result.Count <= 0)
+                {
+                    return NotFound("nothing found");
+                }
+
+                var foundLikes = _mapper.Map<List<UserDTO>>(Result);
+
+                return Ok(foundLikes);
+            }
+            catch (ArgumentException ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+
+                return Conflict(ex.Message);
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
+            }
+
+        }
+
 
         [HttpPut("UpdateComment")]
         public async Task<IActionResult> UpdateComment([FromBody] CommentDTO comment, [FromQuery] int commentId)
@@ -137,6 +174,35 @@ namespace ArtcilesServer.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred : {ex.Message}");
 
 
+            }
+        }
+
+
+        [HttpDelete("RemoveCommentLike")]
+        public async Task<IActionResult> DeleteLikeFromComment([FromQuery] int userId, [FromQuery] int commentId)
+        {
+            try
+            {
+
+
+                await _commentRepo.RemoveLike(userId, commentId);
+
+                return Ok("deleted successfully.");
+            }
+            catch (ArgumentException ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+
+                return Conflict(ex.Message);
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
             }
         }
 

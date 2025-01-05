@@ -3,11 +3,14 @@ using ArtcilesServer.Models;
 using ArtcilesServer.Repo;
 using ArtcilesServer.Services;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ArtcilesServer.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ArticleController : ControllerBase
@@ -44,6 +47,33 @@ namespace ArtcilesServer.Controllers
             }
         }
 
+        [HttpPost("addlike")]
+        public async Task<IActionResult> AddLike([FromBody] ArticleLikeDTO articlelike)
+        {
+
+            try
+            {
+                await _articleRepo.addLike(articlelike);
+                return Ok("Like added successfully.");
+            }
+            catch (ArgumentException ex)
+            {
+                
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+               
+                return Conflict(ex.Message);
+            }
+            catch (Exception ex)
+            {
+               
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
+            }
+        }
+
+
 
      
         #endregion
@@ -72,6 +102,79 @@ namespace ArtcilesServer.Controllers
             }
 
         }
+
+        [HttpGet("GetAllArticlesLikedByUser")]
+        public async Task<IActionResult> GetAllArticlesLikedByUser([FromQuery]int userId)
+        {
+            try
+            {
+
+                var Result = await _articleRepo.getAllArticlesLikedByUser(userId);
+
+                if (Result.Count <= 0)
+                {
+                    return NotFound("nothing found");
+                }
+                 
+                var foundLikes = _mapper.Map<List<ArticleDTO>>(Result);
+
+                return Ok(foundLikes);
+            } catch (ArgumentException ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+
+                return Conflict(ex.Message);
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
+            }
+
+        }
+
+
+        [HttpGet("GetAllLikesOfanArticle")]
+        public async Task<IActionResult> GetAllLikesOfanArticle([FromQuery] int articleId)
+        {
+            try
+            {
+
+                var Result = await _articleRepo.getAllLikesOfanArticle(articleId);
+
+                if (Result.Count <= 0)
+                {
+                    return NotFound("nothing found");
+                }
+
+                var foundLikes = _mapper.Map<List<UserDTO>>(Result);
+
+                return Ok(foundLikes);
+            }
+            catch (ArgumentException ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+
+                return Conflict(ex.Message);
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
+            }
+
+        }
+
+
+     
 
         [HttpGet("SearchArticle")]
         public async Task<IActionResult> GetArticleBySearch([FromQuery] string searchQuery)
@@ -110,7 +213,7 @@ namespace ArtcilesServer.Controllers
                     return NotFound("nothing found");
                 }
 
-                var foundArticles = _mapper.Map<List<Article>>(Result);
+                var foundArticles = _mapper.Map<List<ArticleDTO>>(Result);
 
                 return Ok(foundArticles);
             }
@@ -174,12 +277,12 @@ namespace ArtcilesServer.Controllers
 
         #region delete
         [HttpDelete("DeleteArticle")]
-        public async Task<IActionResult> DeleteArticle([FromQuery] int userId)
+        public async Task<IActionResult> DeleteArticle([FromQuery] int articleId)
         {
             try
             {
 
-                var selectedArticle = await _articleAction.GetByIdAsync(userId);
+                var selectedArticle = await _articleAction.GetByIdAsync(articleId);
                 if (selectedArticle == null)
                 {
                     return NotFound("article not found.");
@@ -194,6 +297,40 @@ namespace ArtcilesServer.Controllers
             }
         }
 
+        [HttpDelete("RemoveArticleLike")]
+        public async Task<IActionResult> DeleteLikeFromArticle([FromQuery] int userId, [FromQuery] int articleId)
+        {
+            try
+            {
+
+              
+                await _articleRepo.RemoveLike(userId,articleId);
+
+                return Ok("deleted successfully.");
+            }
+            catch (ArgumentException ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+
+                return Conflict(ex.Message);
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
+            }
+        }
+
+
+
         #endregion
+
+
+
+
     }
 }

@@ -9,9 +9,9 @@ public partial class Article
 
     public string ArticleTitle { get; set; } = null!;
 
-    public DateOnly ArticleCreatedAt { get; set; }
+    public DateTime ArticleCreatedAt { get; set; }
 
-    public DateOnly ArticleModifiedAt { get; set; }
+    public DateTime ArticleModifiedAt { get; set; }
 
     public string ArticleContent { get; set; } = null!;
 

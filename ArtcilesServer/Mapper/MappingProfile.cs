@@ -9,8 +9,10 @@ namespace ArtcilesServer.Mapper
         public MappingProfile() {
 
             CreateMap<UserDTO,User>();
+            CreateMap<User,UserDTO>();
             CreateMap<CommentDTO, Comment>();
             CreateMap<ReportDTO, Report>();
+            CreateMap<Article,ArticleDTO>();
             CreateMap<ArticleDTO, Article>();
 
         }
