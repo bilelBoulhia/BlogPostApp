@@ -1,4 +1,5 @@
 ﻿using ArtcilesServer.DTO;
+using ArtcilesServer.Interfaces;
 using ArtcilesServer.Models;
 using ArtcilesServer.Repo;
 using AutoMapper;
@@ -11,7 +12,7 @@ namespace ArtcilesServer.Controllers
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class CommentController : ControllerBase
+    public class CommentController : ValidatedControllerBase
     {
         private readonly IMapper _mapper;
 
@@ -32,6 +33,9 @@ namespace ArtcilesServer.Controllers
         {
             try
             {
+                var validationResult = ValidateUser(comment.UserId);
+                if (validationResult != null) return validationResult;
+
                 var Comment = _mapper.Map<Comment>(comment);
 
                 await _commentAction.AddAsync(Comment);
@@ -50,6 +54,7 @@ namespace ArtcilesServer.Controllers
 
             try
             {
+
 
                 var Result = await _commentRepo.GetCommentByUser(userId);
 
@@ -135,6 +140,8 @@ namespace ArtcilesServer.Controllers
         {
             try
             {
+                var validationResult = ValidateUser(comment.UserId);
+                if (validationResult != null) return validationResult;
 
                 var selectedComment = await _commentAction.GetByIdAsync(commentId);
                 if (selectedComment== null)
@@ -160,7 +167,12 @@ namespace ArtcilesServer.Controllers
             try
             {
 
+
                 var selectedComment = await _commentAction.GetByIdAsync(commentId);
+
+                var validationResult = ValidateUser(selectedComment.UserId);
+                if (validationResult != null) return validationResult;
+
                 if (selectedComment == null)
                 {
                     return NotFound("Comment not found.");
@@ -183,7 +195,8 @@ namespace ArtcilesServer.Controllers
         {
             try
             {
-
+                var validationResult = ValidateUser(userId);
+                if (validationResult != null) return validationResult;
 
                 await _commentRepo.RemoveLike(userId, commentId);
 

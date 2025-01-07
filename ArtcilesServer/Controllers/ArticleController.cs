@@ -1,24 +1,25 @@
 ﻿using ArtcilesServer.DTO;
+using ArtcilesServer.Interfaces;
 using ArtcilesServer.Models;
 using ArtcilesServer.Repo;
 using ArtcilesServer.Services;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+
 
 namespace ArtcilesServer.Controllers
 {
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class ArticleController : ControllerBase
+    public class ArticleController : ValidatedControllerBase
     {
         private readonly IMapper _mapper;
-
         private readonly ArticleRepo _articleRepo;
         private readonly GenericRepository<Article> _articleAction;
+        private string? _userIdFromToken => HttpContext?.Items["userId"]?.ToString();
 
         public ArticleController(IMapper mapper,ArticleRepo articleRepo, GenericRepository<Article> articleActions, UserRepo userRepo)
         {
@@ -27,29 +28,39 @@ namespace ArtcilesServer.Controllers
             _mapper = mapper;
             _articleAction = articleActions;
 
-        }
 
+        }
+    
         #region post 
         [HttpPost("CreateArticle")]
         public async Task<IActionResult> CreateArticle([FromBody] ArticleDTO article)
         {
+
+
+
+
+            var validationResult = ValidateUser(article.UserId);
+            if (validationResult != null) return validationResult;
+
             try
             {
                 var Article = _mapper.Map<Article>(article);
-
                 await _articleAction.AddAsync(Article);
-
-                return Ok("User account has been created successfully.");
+                return Ok("created successfully.");
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred : {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
             }
         }
 
         [HttpPost("addlike")]
         public async Task<IActionResult> AddLike([FromBody] ArticleLikeDTO articlelike)
         {
+
+            var validationResult = ValidateUser(articlelike.UserId);
+            if (validationResult != null) return validationResult;
+
 
             try
             {
@@ -84,6 +95,7 @@ namespace ArtcilesServer.Controllers
         {
             try
             {
+
 
                 var Result = await _articleAction.GetAllAsync();
 
@@ -249,12 +261,16 @@ namespace ArtcilesServer.Controllers
 
             #endregion
 
-            #region update 
-            [HttpPut("UpdateArticle")]
+        #region update 
+        [HttpPut("UpdateArticle")]
         public async Task<IActionResult> UpdateArticle([FromBody] ArticleDTO article, [FromQuery] int articleId)
         {
             try
             {
+
+                var validationResult = ValidateUser(article.UserId);
+                if (validationResult != null) return validationResult;
+
 
                 var selectedArticle = await _articleAction.GetByIdAsync(articleId);
                 if (selectedArticle == null)
@@ -282,7 +298,14 @@ namespace ArtcilesServer.Controllers
             try
             {
 
+                
+
                 var selectedArticle = await _articleAction.GetByIdAsync(articleId);
+
+                var validationResult = ValidateUser(selectedArticle.UserId);
+                if (validationResult != null) return validationResult;
+
+
                 if (selectedArticle == null)
                 {
                     return NotFound("article not found.");
@@ -302,8 +325,9 @@ namespace ArtcilesServer.Controllers
         {
             try
             {
+                var validationResult = ValidateUser(userId);
+                if (validationResult != null) return validationResult;
 
-              
                 await _articleRepo.RemoveLike(userId,articleId);
 
                 return Ok("deleted successfully.");

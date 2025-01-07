@@ -12,20 +12,20 @@ public class JwtDebugMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        // Log all headers
+       
         _logger.LogInformation("Request Headers:");
         foreach (var header in context.Request.Headers)
         {
             _logger.LogInformation($"{header.Key}: {header.Value}");
         }
 
-        // Specifically log Authorization header
+       
         var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
         if (authHeader != null)
         {
             _logger.LogInformation($"Authorization Header: {authHeader}");
 
-            // Parse and validate JWT format
+            
             var token = authHeader.StartsWith("Bearer ")
                 ? authHeader.Substring(7)
                 : authHeader;

@@ -13,7 +13,7 @@ namespace ArtcilesServer.Controllers
     [ApiController]
     public class ReportController : ControllerBase
     {
-        public class CommentController : ControllerBase
+        public class CommentController : ValidatedControllerBase
         {
             private readonly IMapper _mapper;
 
@@ -34,6 +34,10 @@ namespace ArtcilesServer.Controllers
             {
                 try
                 {
+
+                    var validationResult = ValidateUser(report.UserId);
+                    if (validationResult != null) return validationResult;
+
                     var Report= _mapper.Map<Report>(report);
 
                     await _reportAction.AddAsync(Report);
@@ -47,12 +51,6 @@ namespace ArtcilesServer.Controllers
             }
 
 
-            //[HttpGet("GetReportByUserId")]
-            //public async Task<IActionResult> GetReportByUserId([FromQuery]int userid)
-            //{
-            //    var selectedReport = await _reportAction.GetByIdAsync(reportId);
-
-            //}
 
 
 
@@ -62,8 +60,12 @@ namespace ArtcilesServer.Controllers
             {
                 try
                 {
+                 
 
                     var selectedReport= await _reportAction.GetByIdAsync(reportId);
+
+                    var validationResult = ValidateUser(selectedReport.UserId);
+                    if (validationResult != null) return validationResult;
                     if (selectedReport== null)
                     {
                         return NotFound("report not found.");

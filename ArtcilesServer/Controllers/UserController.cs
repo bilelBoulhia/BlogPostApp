@@ -1,6 +1,7 @@
 ﻿using ArtcilesServer.DTO;
-using ArtcilesServer.Interfaces;
+
 using ArtcilesServer.Models;
+
 using ArtcilesServer.Repo;
 using ArtcilesServer.Services;
 using ArticlesServer.Services;
@@ -8,12 +9,13 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+
 namespace ArtcilesServer.Controllers
 {
     [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class UserController : ValidatedControllerBase
     {
 
 
@@ -71,7 +73,6 @@ namespace ArtcilesServer.Controllers
         {
             try
             {
-                Console.WriteLine("hey");
                 
                  var user = await  _userRepo.login(login);
 
@@ -98,18 +99,7 @@ namespace ArtcilesServer.Controllers
         #endregion
         #region Get actions
 
-        [Authorize]
-        [HttpGet("CheckAuth")]
-        public async Task<IActionResult> CheckAuth()
-        {
-            var claims = User.Claims.Select(c => new { c.Type, c.Value });
-            return Ok(new
-            {
-                Message = "Auth working!",
-                Username = User.Identity.Name,
-                Claims = claims
-            });
-        }
+   
 
 
         [HttpGet("GetAllAccounts")]
@@ -135,12 +125,12 @@ namespace ArtcilesServer.Controllers
 
         }
         [HttpGet("GetAccountById")]
-        public async Task<IActionResult> GetUserById([FromQuery]int id)
+        public async Task<IActionResult> GetUserById([FromQuery]int userId)
         {
             try
             {
 
-                var user = await _userAction.GetByIdAsync(id);
+                var user = await _userAction.GetByIdAsync(userId);
                 if (user == null)
                 {
                     return NotFound("No user exist");
@@ -189,7 +179,7 @@ namespace ArtcilesServer.Controllers
         {
             try
             {
-
+               
                 var Result = await _userRepo.GetUserFollowing(userId);
 
                 if (Result.Count <= 0)
@@ -217,8 +207,15 @@ namespace ArtcilesServer.Controllers
         {
             try
             {
-                
+
+
+                var validationResult = ValidateUser(userId);
+                if (validationResult != null) return validationResult;
+
                 var selectedUser = await _userAction.GetByIdAsync(userId);
+
+              
+
                 if (selectedUser == null)
                 {
                  return NotFound($"user not found.");
@@ -237,12 +234,22 @@ namespace ArtcilesServer.Controllers
         }
 
         [HttpDelete("DeleteAccount")]
+   
         public async Task<IActionResult> DeleteAccount([FromQuery] int userId)
         {
+
+           
+
             try
             {
+                var validationResult = ValidateUser(userId);
+                if (validationResult != null) return validationResult;
+
 
                 var selectedUser = await _userAction.GetByIdAsync(userId);
+
+            
+
                 if (selectedUser == null)
                 {
                     return NotFound("user not found.");
@@ -250,12 +257,24 @@ namespace ArtcilesServer.Controllers
                 await _userAction.Delete(selectedUser);
 
                 return Ok("deleted successfully.");
+            }catch(InvalidOperationException ex)
+            {
+             
+                return Unauthorized("Invalid token.");
+
+            
+            }catch(ArgumentException ex)
+            {
+                return Forbid("You are not authorized to update this account.");
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while updating the user: {ex.Message}");
             }
         }
+
+
+
 
 
     }

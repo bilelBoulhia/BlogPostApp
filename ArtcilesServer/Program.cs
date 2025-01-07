@@ -1,24 +1,38 @@
 using System.Text;
 using ArtcilesServer.Data;
+
 using ArtcilesServer.Mapper;
+using ArtcilesServer.Middlewares;
 using ArtcilesServer.Models;
 using ArtcilesServer.Repo;
 using ArtcilesServer.Services;
 using ArticlesServer.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContext<DbConn>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string DefaultConnection not found.")));
+builder.Services.AddHealthChecks();
+builder.Services.AddScoped<GenericRepository<User>, GenericRepository<User>>();
+builder.Services.AddScoped<GenericRepository<Report>, GenericRepository<Report>>();
+builder.Services.AddScoped<GenericRepository<Comment>, GenericRepository<Comment>>();
+builder.Services.AddScoped<GenericRepository<Article>, GenericRepository<Article>>();
+builder.Services.AddScoped<UserRepo>();
+builder.Services.AddScoped<CommentRepo>();
+builder.Services.AddScoped<ReportRepo>();
+builder.Services.AddScoped<JWTMiddleware>();
+builder.Services.AddScoped<ArticleRepo>();
+builder.Services.AddScoped<HashPassword>();
+builder.Services.AddScoped<AuthService>();
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddSwaggerGen(c =>
-
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
@@ -33,7 +47,6 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
-
     {
         Name = "Authorization",
         Type = SecuritySchemeType.ApiKey,
@@ -43,43 +56,28 @@ builder.Services.AddSwaggerGen(c =>
         Description = "jwt auth"
     });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
-
     {
         {
-
-
-
-           new OpenApiSecurityScheme
+            new OpenApiSecurityScheme
              {
             Reference = new OpenApiReference
             {
                 Type = ReferenceType.SecurityScheme,
-                Id = "Bearer" 
+                Id = "Bearer"
             }
              },
         new string[] {}
-
         }
-
-
     });
+});
+builder.Services.AddAuthorization(options =>
+{
+    options.DefaultPolicy = new AuthorizationPolicyBuilder()
+            .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+            .RequireAuthenticatedUser()
+            .Build();
 
 });
-builder.Services.AddHealthChecks();
-
-builder.Services.AddScoped<GenericRepository<User>, GenericRepository<User>>();
-builder.Services.AddScoped<GenericRepository<Report>, GenericRepository<Report>>();
-builder.Services.AddScoped<GenericRepository<Comment>, GenericRepository<Comment>>();
-builder.Services.AddScoped<GenericRepository<Article>, GenericRepository<Article>>();
-builder.Services.AddScoped<UserRepo>();
-builder.Services.AddScoped<CommentRepo>();
-builder.Services.AddScoped<ReportRepo>();
-builder.Services.AddScoped<ArticleRepo>();
-builder.Services.AddScoped<HashPassword>();
-builder.Services.AddScoped<AuthService>();
-builder.Services.AddAutoMapper(typeof(MappingProfile));
-
-
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 
 {
@@ -127,9 +125,44 @@ builder.Services.AddCors(options =>
     });
 });
 
-
-
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.UseJwtDebugMiddleware();
+}
+app.MapHealthChecks("/health");
+app.UseCors("AllowAll");
+app.UseMiddleware<JWTMiddleware>();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseHttpsRedirection();
+app.MapControllers();
+app.Run();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //////only use when seeding or migrating 
 
@@ -148,31 +181,3 @@ var app = builder.Build();
 //        logger.LogError(ex, "An error occurred while seeding the database.");
 //    }
 //}
-
-
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseJwtDebugMiddleware();
-}
-
-app.UseCors("AllowAll");
-
-
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseHttpsRedirection();
-
-
-
-
-
-
-
-app.MapControllers();
-
-app.Run();
