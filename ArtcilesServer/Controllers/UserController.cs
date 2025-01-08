@@ -7,7 +7,10 @@ using ArtcilesServer.Services;
 using ArticlesServer.Services;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 
 
 namespace ArtcilesServer.Controllers
@@ -73,14 +76,23 @@ namespace ArtcilesServer.Controllers
         {
             try
             {
+
+                var user = await  _userRepo.login(login);
                 
-                 var user = await  _userRepo.login(login);
-
-
-                if (user == null)
-                    return Unauthorized();
+                if (user == null) return Unauthorized();
 
                 var token = _authService.GenerateToken(user);
+                var refreshToken = _authService.GenerateRefreshToken();
+
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,            
+                    Secure = true,              
+                    SameSite = SameSiteMode.Strict,  
+                    Expires = DateTime.UtcNow.AddDays(7)
+                };
+                Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+
                 return Ok(new { token });
             }
             catch (Exception ex)
@@ -89,8 +101,32 @@ namespace ArtcilesServer.Controllers
             }
         }
 
+        [HttpPost("Refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
+        {
+            var token =  Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+    
 
+            if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(token)) return Unauthorized("No refresh token provided");
 
+            try
+            {
+                TokenRequest tokenRequest = new TokenRequest
+                {
+                    token = token,
+                    refreshToken = request.RefreshToken,
+                };
+
+                var newtoken = _authService.GenerateNewAccessToken(tokenRequest);
+                return Ok(new { newtoken });
+            }
+            catch (SecurityTokenException ex)
+            {
+                return Unauthorized("Invalid refresh token");
+            }
+
+            
+        }
 
 
 
@@ -99,7 +135,7 @@ namespace ArtcilesServer.Controllers
         #endregion
         #region Get actions
 
-   
+
 
 
         [HttpGet("GetAllAccounts")]

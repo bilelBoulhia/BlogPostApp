@@ -19,7 +19,7 @@ namespace ArtcilesServer.Controllers
         private readonly IMapper _mapper;
         private readonly ArticleRepo _articleRepo;
         private readonly GenericRepository<Article> _articleAction;
-        private string? _userIdFromToken => HttpContext?.Items["userId"]?.ToString();
+   
 
         public ArticleController(IMapper mapper,ArticleRepo articleRepo, GenericRepository<Article> articleActions, UserRepo userRepo)
         {
