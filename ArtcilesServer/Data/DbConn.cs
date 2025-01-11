@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using ArtcilesServer.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace ArtcilesServer.Models;
+namespace ArtcilesServer.Data;
 
 public partial class DbConn : DbContext
 {
@@ -17,6 +18,8 @@ public partial class DbConn : DbContext
 
     public virtual DbSet<Article> Articles { get; set; }
 
+    public virtual DbSet<ArticleImage> ArticleImages { get; set; }
+
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<Comment> Comments { get; set; }
@@ -29,7 +32,6 @@ public partial class DbConn : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
-  
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -61,6 +63,21 @@ public partial class DbConn : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__articles__userId__4316F928");
+        });
+
+        modelBuilder.Entity<ArticleImage>(entity =>
+        {
+            entity.HasKey(e => e.ImageId).HasName("PK__articleI__7516F70CFB1204E1");
+
+            entity.ToTable("articleImages");
+
+            entity.Property(e => e.ArticleId).HasColumnName("articleId");
+            entity.Property(e => e.ImageLink).IsUnicode(false);
+
+            entity.HasOne(d => d.Article).WithMany(p => p.ArticleImages)
+                .HasForeignKey(d => d.ArticleId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__articleIm__artic__797309D9");
         });
 
         modelBuilder.Entity<Category>(entity =>
@@ -192,6 +209,10 @@ public partial class DbConn : DbContext
             entity.Property(e => e.UserHash)
                 .IsUnicode(false)
                 .HasColumnName("userHash");
+            entity.Property(e => e.UserImage)
+                .IsUnicode(false)
+                .HasDefaultValue("")
+                .HasColumnName("userImage");
             entity.Property(e => e.UserName)
                 .HasMaxLength(50)
                 .IsUnicode(false)

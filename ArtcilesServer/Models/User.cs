@@ -21,6 +21,8 @@ public partial class User
 
     public string UserSalt { get; set; } = null!;
 
+    public string? UserImage { get; set; }
+
     public virtual ICollection<Article> Articles { get; set; } = new List<Article>();
 
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();

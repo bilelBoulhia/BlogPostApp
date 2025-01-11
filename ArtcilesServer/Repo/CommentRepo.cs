@@ -1,4 +1,5 @@
-﻿using ArtcilesServer.DTO;
+﻿using ArtcilesServer.Data;
+using ArtcilesServer.DTO;
 using ArtcilesServer.Interfaces;
 using ArtcilesServer.Models;
 using Microsoft.EntityFrameworkCore;
@@ -97,9 +98,5 @@ namespace ArtcilesServer.Repo
             await _context.SaveChangesAsync();
         }
 
-        public Task addLike(CommentDTO comment)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

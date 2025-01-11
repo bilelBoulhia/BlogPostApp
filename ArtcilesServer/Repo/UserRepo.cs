@@ -1,4 +1,5 @@
-﻿using ArtcilesServer.DTO;
+﻿using ArtcilesServer.Data;
+using ArtcilesServer.DTO;
 using ArtcilesServer.Interfaces;
 using ArtcilesServer.Models;
 using ArtcilesServer.Repos;
@@ -41,13 +42,15 @@ namespace ArtcilesServer.Repo
         public async Task<ICollection<FollowerDTO>> GetUserFollowing(int userId)
         {
             return await _context.Users
-                                  .Where(follower => follower.UserId == userId)
-                                  .Select(follower => new FollowerDTO
-                                    {
-                                        UserId = follower.UserId,
-                                        UserName = follower.UserName,
-                                        UserFamilyName = follower.UserFamilyName
-                                    }).ToListAsync();
+       .Where(u => u.UserId == userId)
+       .SelectMany(u => u.Follwers)
+       .Select(f => new FollowerDTO
+       {
+           UserId = f.UserId,
+           UserName = f.UserName,
+           UserFamilyName = f.UserFamilyName,
+       })
+       .ToListAsync();
         }
 
         public async Task<User> login(LoginDTO loginCredentials)
@@ -65,6 +68,24 @@ namespace ArtcilesServer.Repo
             return user;
         }
 
+        public async Task followUser(FollowDTO followDTO)
+        {
+            var userWhoWillBeFollowed = _context.Users.Where(u => u.UserId == followDTO.UserId).FirstOrDefault();
+            var userWhoWantsToFollow = _context.Users.Where(u => u.UserId == followDTO.followerId).FirstOrDefault();
+            userWhoWillBeFollowed?.Follwers.Add(userWhoWantsToFollow);
+          
+            await SaveAsync();
+        }
+
+        public async Task removeFollower(FollowDTO followDTO)
+        {
+            var userWhoWillBeFollowed = _context.Users.Where(u => u.UserId == followDTO.UserId).FirstOrDefault();
+            var userWhoWantsToFollow = _context.Users.Where(u => u.UserId == followDTO.followerId).FirstOrDefault();
+            userWhoWillBeFollowed?.Follwers.Remove(userWhoWantsToFollow);
+
+            await SaveAsync();
+
+        }
     }
 }
 

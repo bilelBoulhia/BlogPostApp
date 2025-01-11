@@ -69,6 +69,32 @@ namespace ArtcilesServer.Controllers
             }
         }
 
+        [HttpPost("FollowUser")]
+        public async Task<IActionResult> FollowUser([FromBody] FollowDTO followDTO)
+        {
+            var validationResult = ValidateUser(followDTO.UserId);
+            if (validationResult != null) return validationResult;
+
+            try
+            {
+
+
+                var follower =await _userAction.GetByIdAsync(followDTO.followerId);
+                var followed =await _userAction.GetByIdAsync(followDTO.UserId);
+
+                if(follower == null || followed == null) return NotFound("follower or user not fund");
+
+                await _userRepo.followUser(followDTO);
+
+                return Ok("followed succefuly");
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred : {ex.Message}");
+            }
+        }
+
 
         [AllowAnonymous]
         [HttpPost("Login")]
@@ -118,7 +144,8 @@ namespace ArtcilesServer.Controllers
                 };
 
                 var newtoken = _authService.GenerateNewAccessToken(tokenRequest);
-                return Ok(new { newtoken });
+                var newrefreshToken = _authService.GenerateRefreshToken();
+                return Ok(new { newtoken ,   newrefreshToken });
             }
             catch (SecurityTokenException ex)
             {
@@ -241,12 +268,11 @@ namespace ArtcilesServer.Controllers
         [HttpPut("UpdateAccount")]
         public async Task<IActionResult> UpdateAccountData([FromBody] UserDTO user, [FromQuery] int userId)
         {
+            var validationResult = ValidateUser(userId);
+            if (validationResult != null) return validationResult;
+
             try
             {
-
-
-                var validationResult = ValidateUser(userId);
-                if (validationResult != null) return validationResult;
 
                 var selectedUser = await _userAction.GetByIdAsync(userId);
 
@@ -256,8 +282,9 @@ namespace ArtcilesServer.Controllers
                 {
                  return NotFound($"user not found.");
                 }
-                var updatedUser = _mapper.Map<User>(user);
-                await _userAction.Update(updatedUser);
+               
+                _mapper.Map(selectedUser,userId); 
+                await _userAction.Update(selectedUser);
                 
                 return Ok("updated successfully.");
                 
@@ -310,6 +337,32 @@ namespace ArtcilesServer.Controllers
         }
 
 
+
+        [HttpDelete("RemoveFollower")]
+        public async Task<IActionResult> RemoveFollower([FromBody] FollowDTO followDTO)
+        {
+            var validationResult = ValidateUser(followDTO.UserId);
+            if (validationResult != null) return validationResult;
+
+            try
+            {
+
+
+                var follower = await _userAction.GetByIdAsync(followDTO.followerId);
+                var followed = await _userAction.GetByIdAsync(followDTO.UserId);
+
+                if (follower == null || followed == null) return NotFound("follower or user not fund");
+
+                await _userRepo.removeFollower(followDTO);
+
+                return Ok("followed successfuly");
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred : {ex.Message}");
+            }
+        }
 
 
 

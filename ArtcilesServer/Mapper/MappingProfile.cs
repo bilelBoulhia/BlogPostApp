@@ -11,6 +11,7 @@ namespace ArtcilesServer.Mapper
             CreateMap<UserDTO,User>();
             CreateMap<User,UserDTO>();
             CreateMap<CommentDTO, Comment>();
+            CreateMap<Comment, CommentDTO>();
             CreateMap<ReportDTO, Report>();
             CreateMap<Article,ArticleDTO>();
             CreateMap<ArticleDTO, Article>();

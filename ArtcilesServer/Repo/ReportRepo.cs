@@ -1,4 +1,4 @@
-﻿using ArtcilesServer.Models;
+﻿using ArtcilesServer.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace ArtcilesServer.Repo

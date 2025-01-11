@@ -19,14 +19,16 @@ namespace ArtcilesServer.Controllers
         private readonly IMapper _mapper;
         private readonly ArticleRepo _articleRepo;
         private readonly GenericRepository<Article> _articleAction;
-   
+        private readonly GenericRepository<Category> _categoryAction;
 
-        public ArticleController(IMapper mapper,ArticleRepo articleRepo, GenericRepository<Article> articleActions, UserRepo userRepo)
+
+        public ArticleController(IMapper mapper,ArticleRepo articleRepo, GenericRepository<Category> categoryActions, GenericRepository<Article> articleActions, UserRepo userRepo)
         {
 
             _articleRepo = articleRepo;
             _mapper = mapper;
             _articleAction = articleActions;
+            _categoryAction = categoryActions;
 
 
         }
@@ -41,6 +43,9 @@ namespace ArtcilesServer.Controllers
 
             var validationResult = ValidateUser(article.UserId);
             if (validationResult != null) return validationResult;
+
+            var catergory = await _categoryAction.GetByIdAsync(article.CategoryId);
+            if (catergory == null) return BadRequest("category doesn't exist");
 
             try
             {
@@ -275,10 +280,11 @@ namespace ArtcilesServer.Controllers
                 var selectedArticle = await _articleAction.GetByIdAsync(articleId);
                 if (selectedArticle == null)
                 {
-                    return NotFound($"user not found.");
+                    return NotFound($"article not found.");
                 }
-                var updatedArticle = _mapper.Map<Article>(article);
-                await _articleAction.Update(updatedArticle);
+                
+                _mapper.Map(selectedArticle,articleId);      
+                await _articleAction.Update(selectedArticle);
 
                 return Ok("updated successfully.");
 

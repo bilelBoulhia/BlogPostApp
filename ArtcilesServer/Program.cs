@@ -24,6 +24,7 @@ builder.Services.AddScoped<GenericRepository<User>, GenericRepository<User>>();
 builder.Services.AddScoped<GenericRepository<Report>, GenericRepository<Report>>();
 builder.Services.AddScoped<GenericRepository<Comment>, GenericRepository<Comment>>();
 builder.Services.AddScoped<GenericRepository<Article>, GenericRepository<Article>>();
+builder.Services.AddScoped<GenericRepository<Category>, GenericRepository<Category>>();
 builder.Services.AddScoped<UserRepo>();
 builder.Services.AddScoped<CommentRepo>();
 builder.Services.AddScoped<ReportRepo>();

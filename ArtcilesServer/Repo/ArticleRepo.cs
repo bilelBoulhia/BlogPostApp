@@ -1,4 +1,5 @@
-﻿using ArtcilesServer.DTO;
+﻿using ArtcilesServer.Data;
+using ArtcilesServer.DTO;
 using ArtcilesServer.Interfaces;
 using ArtcilesServer.Models;
 using AutoMapper;

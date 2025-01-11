@@ -19,6 +19,8 @@ public partial class Article
 
     public int CategoryId { get; set; }
 
+    public virtual ICollection<ArticleImage> ArticleImages { get; set; } = new List<ArticleImage>();
+
     public virtual Category Category { get; set; } = null!;
 
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();

@@ -1,12 +1,12 @@
-﻿using ArtcilesServer.Interfaces;
-using ArtcilesServer.Models;
+﻿using ArtcilesServer.Data;
+using ArtcilesServer.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace ArtcilesServer.Repo
 {
-  
-        public class GenericRepository<T> : IGenericRepository<T> where T : class
+
+    public class GenericRepository<T> : IGenericRepository<T> where T : class
         {
             private readonly DbConn _context;
             private readonly DbSet<T> _dbSet;

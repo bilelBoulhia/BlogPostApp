@@ -10,7 +10,7 @@ namespace ArtcilesServer.Interfaces
 
 
         Task RemoveLike(int articleId, int userId);
-        Task addLike(CommentDTO comment);
+        Task addLike(CommentLikeDTO commentLike);
 
         Task<ICollection<User>> getAllLikesOfaComment(int CommentId);
 

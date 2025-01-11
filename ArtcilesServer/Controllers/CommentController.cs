@@ -48,6 +48,40 @@ namespace ArtcilesServer.Controllers
             }
         }
 
+
+
+        [HttpPost("addlike")]
+        public async Task<IActionResult> AddLike([FromBody] CommentLikeDTO commentLike)
+        {
+
+            var validationResult = ValidateUser(commentLike.UserId);
+            if (validationResult != null) return validationResult;
+
+
+            try
+            {
+                await _commentRepo.addLike(commentLike);
+                return Ok("Like added successfully.");
+            }
+            catch (ArgumentException ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+
+                return Conflict(ex.Message);
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
+            }
+        }
+
+
+
         [HttpGet("GetCommentByUser")]
         public async Task<IActionResult> GetCommentByUser([FromQuery] int userId)
         {
@@ -143,21 +177,21 @@ namespace ArtcilesServer.Controllers
                 var validationResult = ValidateUser(comment.UserId);
                 if (validationResult != null) return validationResult;
 
-                var selectedComment = await _commentAction.GetByIdAsync(commentId);
-                if (selectedComment== null)
+                var existingComment = await _commentAction.GetByIdAsync(commentId);
+                if (existingComment == null)
                 {
-                    return NotFound($"user not found.");
+                    return NotFound($"Comment not found.");
                 }
-                var updatedComment = _mapper.Map<Comment>(comment);
-                await _commentAction.Update(updatedComment);
 
-                return Ok("updated successfully.");
+           
+                _mapper.Map(comment, existingComment);  
+                await _commentAction.Update(existingComment);
 
-
+                return Ok("Updated successfully.");
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred : {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
             }
         }
 

@@ -27,7 +27,7 @@ namespace ArticlesServer.Services
             _validationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key)),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"])),
                 ValidateIssuer = true,
                 ValidIssuer = _issuer,
                 ValidateAudience = true,
@@ -139,17 +139,22 @@ namespace ArticlesServer.Services
 
         public ClaimsPrincipal ValidateToken(string token)
         {
-            var key = Encoding.ASCII.GetBytes(_key);
-
-            try {
-
+            try
+            {
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var claimsPrincipal = tokenHandler.ValidateToken(token,_validationParameters, out SecurityToken validatedToken);
-
-                return claimsPrincipal;
+                return tokenHandler.ValidateToken(token, _validationParameters, out SecurityToken validatedToken);
             }
-            catch {
-                throw new ApplicationException("Token has expired.");
+            catch (SecurityTokenExpiredException)
+            {
+                throw new ApplicationException("Token  expired");
+            }
+            catch (SecurityTokenInvalidSignatureException)
+            {
+                throw new ApplicationException("invalid signature.");
+            }
+            catch (SecurityTokenException ex)
+            {
+                throw new ApplicationException($"error : {ex.Message}");
             }
         }
 
