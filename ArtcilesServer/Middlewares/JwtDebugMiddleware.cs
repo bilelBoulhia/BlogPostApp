@@ -13,7 +13,7 @@ public class JwtDebugMiddleware
     public async Task InvokeAsync(HttpContext context)
     {
        
-        _logger.LogInformation("Request Headers:");
+        _logger.LogInformation("Headers:");
         foreach (var header in context.Request.Headers)
         {
             _logger.LogInformation($"{header.Key}: {header.Value}");
@@ -23,18 +23,18 @@ public class JwtDebugMiddleware
         var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
         if (authHeader != null)
         {
-            _logger.LogInformation($"Authorization Header: {authHeader}");
+            _logger.LogInformation($"authorization Header: {authHeader}");
 
             
             var token = authHeader.StartsWith("Bearer ")
                 ? authHeader.Substring(7)
                 : authHeader;
 
-            _logger.LogInformation($"Extracted Token: {token}");
+            _logger.LogInformation($"token: {token}");
         }
         else
         {
-            _logger.LogWarning("No Authorization header present");
+            _logger.LogWarning("no Auth header present");
         }
 
         await _next(context);

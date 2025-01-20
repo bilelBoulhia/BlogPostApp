@@ -15,19 +15,21 @@ public partial class User
 
     public DateTime UserBirthDay { get; set; }
 
-    public string UserEmail { get; set; } = null!;
-
     public string UserHash { get; set; } = null!;
 
     public string UserSalt { get; set; } = null!;
 
-    public string? UserImage { get; set; }
+    public string UserImage { get; set; }
+
+    public string? UserEmail { get; set; }
 
     public virtual ICollection<Article> Articles { get; set; } = new List<Article>();
 
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
     public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
+
+    public virtual ICollection<Article> Articles1 { get; set; } = new List<Article>();
 
     public virtual ICollection<Article> ArticlesNavigation { get; set; } = new List<Article>();
 

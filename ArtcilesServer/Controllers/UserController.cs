@@ -27,13 +27,15 @@ namespace ArtcilesServer.Controllers
         private readonly IMapper _mapper;
         private readonly UserRepo _userRepo;
         private readonly GenericRepository<User> _userAction;
+        private readonly GenericRepository<Hobby> _hobbyAction;
         private readonly HashPassword _hashPassword;
         private readonly AuthService _authService;
-        public UserController(IMapper mapper,AuthService authService ,GenericRepository<User> userActions,UserRepo userRepo,HashPassword hashPassword)
+        public UserController(IMapper mapper,AuthService authService, GenericRepository<Hobby> hobbyActions,GenericRepository<User> userActions,UserRepo userRepo,HashPassword hashPassword)
         {
 
             _hashPassword = hashPassword;
             _userRepo = userRepo;
+            _hobbyAction = hobbyActions;
             _mapper = mapper;
             _userAction = userActions;
             _authService = authService;
@@ -94,6 +96,32 @@ namespace ArtcilesServer.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred : {ex.Message}");
             }
         }
+        [AllowAnonymous]
+        [HttpPost("AddHobbies")]
+        public async Task<IActionResult> AddHobbies([FromBody] HobbiesDTO hobbieDTO)
+        {
+            try
+            {
+                var user = await _userAction.GetByIdAsync(hobbieDTO.userId);
+                if (user == null) return NotFound("User not found");
+
+                if (hobbieDTO.Hobbies.Count < 3)
+                    return BadRequest("At least 3 hobbies required");
+
+                var mappedHobbies = _mapper.Map<List<Hobby>>(hobbieDTO.Hobbies);
+
+               
+                await _userRepo.AddHobbies(mappedHobbies, hobbieDTO.userId);
+
+                return Ok("Hobbies added successfully");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
+            }
+        }
+
+
 
 
         [AllowAnonymous]
@@ -109,17 +137,9 @@ namespace ArtcilesServer.Controllers
 
                 var token = _authService.GenerateToken(user);
                 var refreshToken = _authService.GenerateRefreshToken();
+               
 
-                var cookieOptions = new CookieOptions
-                {
-                    HttpOnly = true,            
-                    Secure = true,              
-                    SameSite = SameSiteMode.Strict,  
-                    Expires = DateTime.UtcNow.AddDays(7)
-                };
-                Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
-
-                return Ok(new { token });
+                return Ok(new { token,refreshToken });
             }
             catch (Exception ex)
             {
@@ -183,10 +203,62 @@ namespace ArtcilesServer.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while creating the employee: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error : {ex.Message}");
             }
 
         }
+        [AllowAnonymous]
+        [HttpGet("GetAllHobbies")]
+        public async Task<IActionResult> GetAllHobbies()
+        {
+            try
+            {
+
+                var hobbies = await _hobbyAction.GetAllAsync();
+                var hobbylist = _mapper.Map<List<HobbyDTO>>(hobbies);
+
+
+                if (hobbylist.Count < 0)
+                {
+                    return NotFound("No hobbies exist");
+                }
+                return Ok(hobbylist);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error: {ex.Message}");
+            }
+
+        }
+
+
+    
+
+
+        [HttpGet("RemindUserToAddPicture")]
+        public async Task<IActionResult> RemindUserToAddPicture(int userId)
+        {
+
+            var validationResult = ValidateUser(userId);
+            if (validationResult != null) return validationResult;
+
+            try
+            {
+
+                var userHasPFP = await _userRepo.RemindUserToAddProfilePicture(userId);
+
+
+
+                
+                return Ok(userHasPFP);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error : {ex.Message}");
+            }
+
+        }
+
         [HttpGet("GetAccountById")]
         public async Task<IActionResult> GetUserById([FromQuery]int userId)
         {
@@ -205,7 +277,7 @@ namespace ArtcilesServer.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while creating the employee: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An errr: {ex.Message}");
             }
 
         }
@@ -229,7 +301,7 @@ namespace ArtcilesServer.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while creating the employee: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error : {ex.Message}");
             }
 
         }
@@ -240,6 +312,7 @@ namespace ArtcilesServer.Controllers
         [HttpGet("GetUserFollowing")]
         public async Task<IActionResult> GetUserFollowing([FromQuery] int userId)
         {
+
             try
             {
                
@@ -256,11 +329,35 @@ namespace ArtcilesServer.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while creating the employee: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error: {ex.Message}");
             }
 
         }
 
+
+        [HttpGet("GetUserHobbies")]
+        public async Task<IActionResult> GetUserHobbies([FromQuery] int userId)
+        {
+            try
+            {
+
+                var Result = await _userRepo.GetUserHobbies(userId);
+
+                if (Result.Count <= 0)
+                {
+                    return NotFound("nothing found");
+                }
+
+                var foundHobbies = _mapper.Map<List<HobbyDTO>>(Result);
+
+                return Ok(foundHobbies);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error: {ex.Message}");
+            }
+
+        }
 
 
         #endregion
@@ -292,7 +389,7 @@ namespace ArtcilesServer.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while updating the user: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error : {ex.Message}");
             }
         }
 
@@ -332,7 +429,7 @@ namespace ArtcilesServer.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred while updating the user: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error: {ex.Message}");
             }
         }
 

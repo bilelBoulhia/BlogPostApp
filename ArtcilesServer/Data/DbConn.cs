@@ -43,7 +43,7 @@ public partial class DbConn : DbContext
 
             entity.Property(e => e.ArticleId).HasColumnName("articleId");
             entity.Property(e => e.ArticleContent)
-                .IsUnicode(false)
+                .HasDefaultValue("")
                 .HasColumnName("articleContent");
             entity.Property(e => e.ArticleCreatedAt).HasColumnName("articleCreatedAt");
             entity.Property(e => e.ArticleModifiedAt).HasColumnName("articleModifiedAt");
@@ -61,7 +61,6 @@ public partial class DbConn : DbContext
 
             entity.HasOne(d => d.User).WithMany(p => p.Articles)
                 .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__articles__userId__4316F928");
         });
 
@@ -118,7 +117,6 @@ public partial class DbConn : DbContext
 
             entity.HasOne(d => d.User).WithMany(p => p.Comments)
                 .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__comments__userId__47DBAE45");
         });
 
@@ -173,7 +171,6 @@ public partial class DbConn : DbContext
 
             entity.HasOne(d => d.User).WithMany(p => p.Reports)
                 .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__reports__userId__4E88ABD4");
         });
 
@@ -192,9 +189,11 @@ public partial class DbConn : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__users__CB9A1CFF7C51B958");
+            entity.HasKey(e => e.UserId).HasName("PK__users__CB9A1CFF44561310");
 
             entity.ToTable("users");
+
+            entity.HasIndex(e => e.UserEmail, "UQ__users__D54ADF555F578D76").IsUnique();
 
             entity.Property(e => e.UserId).HasColumnName("userId");
             entity.Property(e => e.UserBirthDay).HasColumnName("userBirthDay");
@@ -222,20 +221,39 @@ public partial class DbConn : DbContext
                 .IsUnicode(false)
                 .HasColumnName("userSalt");
 
+            entity.HasMany(d => d.Articles1).WithMany(p => p.UsersNavigation)
+                .UsingEntity<Dictionary<string, object>>(
+                    "SavedArticle",
+                    r => r.HasOne<Article>().WithMany()
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("FK__savedArti__artic__4A8310C6"),
+                    l => l.HasOne<User>().WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("FK__savedArti__userI__498EEC8D"),
+                    j =>
+                    {
+                        j.HasKey("UserId", "ArticleId").HasName("PK__savedArt__3CC721C89EC1E131");
+                        j.ToTable("savedArticles");
+                        j.IndexerProperty<int>("UserId").HasColumnName("userId");
+                        j.IndexerProperty<int>("ArticleId").HasColumnName("articleId");
+                    });
+
             entity.HasMany(d => d.ArticlesNavigation).WithMany(p => p.Users)
                 .UsingEntity<Dictionary<string, object>>(
                     "LikesForArticle",
                     r => r.HasOne<Article>().WithMany()
                         .HasForeignKey("ArticleId")
                         .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__likesForA__artic__5AEE82B9"),
+                        .HasConstraintName("FK__likesForA__artic__3E1D39E1"),
                     l => l.HasOne<User>().WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__likesForA__userI__59FA5E80"),
+                        .HasConstraintName("FK__likesForA__userI__3D2915A8"),
                     j =>
                     {
-                        j.HasKey("UserId", "ArticleId").HasName("PK__likesFor__3CC721C85547ECED");
+                        j.HasKey("UserId", "ArticleId").HasName("PK__likesFor__3CC721C8B86E9E33");
                         j.ToTable("likesForArticles");
                         j.IndexerProperty<int>("UserId").HasColumnName("userId");
                         j.IndexerProperty<int>("ArticleId").HasColumnName("articleId");
@@ -247,14 +265,14 @@ public partial class DbConn : DbContext
                     r => r.HasOne<Comment>().WithMany()
                         .HasForeignKey("CommentId")
                         .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__likesForC__comme__534D60F1"),
+                        .HasConstraintName("FK__likesForC__comme__367C1819"),
                     l => l.HasOne<User>().WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__likesForC__userI__52593CB8"),
+                        .HasConstraintName("FK__likesForC__userI__3587F3E0"),
                     j =>
                     {
-                        j.HasKey("UserId", "CommentId").HasName("PK__likesFor__0747F5E67207DF19");
+                        j.HasKey("UserId", "CommentId").HasName("PK__likesFor__0747F5E6C9DE2645");
                         j.ToTable("likesForComments");
                         j.IndexerProperty<int>("UserId").HasColumnName("userId");
                         j.IndexerProperty<int>("CommentId").HasColumnName("commentId");
@@ -285,14 +303,14 @@ public partial class DbConn : DbContext
                     r => r.HasOne<Hobby>().WithMany()
                         .HasForeignKey("HobbyId")
                         .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__userHobbi__hobby__693CA210"),
+                        .HasConstraintName("FK__userHobbi__hobby__41EDCAC5"),
                     l => l.HasOne<User>().WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__userHobbi__userI__68487DD7"),
+                        .HasConstraintName("FK__userHobbi__userI__40F9A68C"),
                     j =>
                     {
-                        j.HasKey("UserId", "HobbyId").HasName("PK__userHobb__AB2481EA40614279");
+                        j.HasKey("UserId", "HobbyId").HasName("PK__userHobb__AB2481EA276E544F");
                         j.ToTable("userHobbies");
                         j.IndexerProperty<int>("UserId").HasColumnName("userId");
                         j.IndexerProperty<int>("HobbyId").HasColumnName("hobbyId");
@@ -317,6 +335,10 @@ public partial class DbConn : DbContext
                         j.IndexerProperty<int>("FollwerId").HasColumnName("follwerId");
                     });
         });
+
+        modelBuilder.Entity<BasicArticleWithDetails>().HasNoKey();
+        modelBuilder.Entity<FullArticleWithDetails>().HasNoKey();
+        modelBuilder.Entity<CommentsWithDetails>().HasNoKey();
 
         OnModelCreatingPartial(modelBuilder);
     }

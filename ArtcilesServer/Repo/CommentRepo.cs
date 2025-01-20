@@ -16,21 +16,7 @@ namespace ArtcilesServer.Repo
             _context = context;
         }
 
-        public async Task<ICollection<User>> getAllLikesOfaComment(int CommentId)
-        {
-            var comment = await _context.Comments
-              .Include(a => a.Users)
-              .FirstOrDefaultAsync(a => a.CommentId == CommentId);
-
-            if (comment == null)
-            {
-                throw new ArgumentException("comment Not found");
-            }
-
-
-
-            return comment.Users;
-        }
+       
 
         public async Task RemoveLike(int commentId, int userId)
         {
@@ -56,10 +42,7 @@ namespace ArtcilesServer.Repo
             await SaveAsync();
         }
 
-        public async Task<ICollection<Comment>> GetCommentByArticle(int articleId)
-        {
-            return await _context.Comments.Where(c=>c.ArticleId == articleId).ToListAsync();
-        }
+      
 
         public async Task<ICollection<Comment>> GetCommentByUser(int userId)
         {

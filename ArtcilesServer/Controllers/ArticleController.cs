@@ -88,30 +88,84 @@ namespace ArtcilesServer.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
             }
         }
+        [HttpPost("SaveArticle")]
+        public async Task<IActionResult> SaveArticle([FromBody] SaveArticleDTO SavedarticleDTO)
+        {
+
+            var validationResult = ValidateUser(SavedarticleDTO.UserId);
+            if (validationResult != null) return validationResult;
+
+
+            try
+            {
+                await _articleRepo.saveArticle(SavedarticleDTO);
+                return Ok("Article saved successfully.");
+            }
+            catch (ArgumentException ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+
+                return Conflict(ex.Message);
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
+            }
+        }
 
 
 
-     
         #endregion
 
         #region get
-        [HttpGet("GettAllArticles")]
+        [HttpGet("GetAllArticles")]
         public async Task<IActionResult> GetAllArticles()
         {
             try
             {
 
 
-                var Result = await _articleAction.GetAllAsync();
+                var Result = await _articleRepo.GetAllArticles();
 
                 if (Result.Count <= 0)
                 {
                     return NotFound("nothing found");
                 }
 
-                var foundArticles = _mapper.Map<List<ArticleDTO>>(Result);
+    
 
-                return Ok(foundArticles);
+                return Ok(Result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
+            }
+
+        }
+
+
+        [HttpGet("GetFullArticleDetails")]
+        public async Task<IActionResult> GetFullArticleDetails([FromQuery]int articleId)
+        {
+            try
+            {
+
+
+                var Result = await _articleRepo.GetFullArticleDetails(articleId);
+
+                if (Result.Count <= 0)
+                {
+                    return NotFound("nothing found");
+                }
+
+
+
+                return Ok(Result);
             }
             catch (Exception ex)
             {
@@ -132,10 +186,11 @@ namespace ArtcilesServer.Controllers
                 {
                     return NotFound("nothing found");
                 }
-                 
-                var foundLikes = _mapper.Map<List<ArticleDTO>>(Result);
 
-                return Ok(foundLikes);
+
+                var result = _mapper.Map<List<ArticleDTO>>(Result);
+
+                return Ok(result);
             } catch (ArgumentException ex)
             {
 
@@ -155,22 +210,24 @@ namespace ArtcilesServer.Controllers
         }
 
 
-        [HttpGet("GetAllLikesOfanArticle")]
-        public async Task<IActionResult> GetAllLikesOfanArticle([FromQuery] int articleId)
+
+        [HttpGet("GetAllArticlesSavedByUser")]
+        public async Task<IActionResult> GetAllArticlesSavedByUser([FromQuery] int userId)
         {
             try
             {
 
-                var Result = await _articleRepo.getAllLikesOfanArticle(articleId);
+                var Result = await _articleRepo.getAllSavedArticlesByUser(userId);
 
                 if (Result.Count <= 0)
                 {
                     return NotFound("nothing found");
                 }
 
-                var foundLikes = _mapper.Map<List<UserDTO>>(Result);
 
-                return Ok(foundLikes);
+
+
+                return Ok(Result);
             }
             catch (ArgumentException ex)
             {
@@ -191,6 +248,9 @@ namespace ArtcilesServer.Controllers
         }
 
 
+       
+
+
      
 
         [HttpGet("SearchArticle")]
@@ -206,9 +266,9 @@ namespace ArtcilesServer.Controllers
                     return NotFound("nothing found");
                 }
 
-                var foundArticles = _mapper.Map<List<Article>>(searchResult);
+                
 
-                return Ok(foundArticles);
+                return Ok(searchResult);
             }
             catch (Exception ex)
             {
@@ -230,9 +290,8 @@ namespace ArtcilesServer.Controllers
                     return NotFound("nothing found");
                 }
 
-                var foundArticles = _mapper.Map<List<ArticleDTO>>(Result);
 
-                return Ok(foundArticles);
+                return Ok(Result);
             }
             catch (Exception ex)
             {
@@ -253,9 +312,8 @@ namespace ArtcilesServer.Controllers
                     return NotFound("nothing found");
                 }
 
-                var foundArticles = _mapper.Map<List<Article>>(Result);
 
-                return Ok(foundArticles);
+                return Ok(Result);
             }
             catch (Exception ex)
             {
@@ -263,8 +321,35 @@ namespace ArtcilesServer.Controllers
             }
         }
 
+        
 
-            #endregion
+        [HttpGet("GetAllCategory")]
+        public async Task<IActionResult> GetAllCategory()
+        {
+
+            try
+            {
+
+                var Result = await _articleRepo.GetAllCategories();
+                var mappedCategory = _mapper.Map<List<CategoryDTO>>(Result);
+
+                if (Result == null)
+                {
+                    return NotFound("nothing found");
+                }
+
+
+                return Ok(mappedCategory);
+            }
+         
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex.Message}");
+            }
+        }
+
+
+        #endregion
 
         #region update 
         [HttpPut("UpdateArticle")]
@@ -327,14 +412,14 @@ namespace ArtcilesServer.Controllers
         }
 
         [HttpDelete("RemoveArticleLike")]
-        public async Task<IActionResult> DeleteLikeFromArticle([FromQuery] int userId, [FromQuery] int articleId)
+        public async Task<IActionResult> DeleteLikeFromArticle([FromQuery] ArticleLikeDTO articleLikeDTO)
         {
             try
             {
-                var validationResult = ValidateUser(userId);
+                var validationResult = ValidateUser(articleLikeDTO.UserId);
                 if (validationResult != null) return validationResult;
 
-                await _articleRepo.RemoveLike(userId,articleId);
+                await _articleRepo.RemoveLike(articleLikeDTO);
 
                 return Ok("deleted successfully.");
             }
@@ -355,7 +440,34 @@ namespace ArtcilesServer.Controllers
             }
         }
 
+        [HttpDelete("RemoveSavedArticle")]
+        public async Task<IActionResult> RemoveSavedArticle([FromQuery] SaveArticleDTO saveArticleDTO)
+        {
+            try
+            {
+                var validationResult = ValidateUser(saveArticleDTO.UserId);
+                if (validationResult != null) return validationResult;
 
+                await _articleRepo.RemoveSave(saveArticleDTO);
+
+                return Ok("deleted successfully.");
+            }
+            catch (ArgumentException ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+
+                return Conflict(ex.Message);
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
+            }
+        }
 
         #endregion
 

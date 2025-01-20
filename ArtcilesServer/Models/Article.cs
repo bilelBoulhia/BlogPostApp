@@ -13,11 +13,11 @@ public partial class Article
 
     public DateTime ArticleModifiedAt { get; set; }
 
+    public int CategoryId { get; set; }
+
     public string ArticleContent { get; set; } = null!;
 
     public int UserId { get; set; }
-
-    public int CategoryId { get; set; }
 
     public virtual ICollection<ArticleImage> ArticleImages { get; set; } = new List<ArticleImage>();
 
@@ -30,4 +30,6 @@ public partial class Article
     public virtual User User { get; set; } = null!;
 
     public virtual ICollection<User> Users { get; set; } = new List<User>();
+
+    public virtual ICollection<User> UsersNavigation { get; set; } = new List<User>();
 }

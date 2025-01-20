@@ -1,8 +1,6 @@
 ﻿
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using ArticlesServer.Services;
-using Microsoft.AspNetCore.Mvc;
 
 namespace ArtcilesServer.Middlewares
 {

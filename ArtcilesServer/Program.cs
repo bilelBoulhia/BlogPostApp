@@ -1,12 +1,13 @@
 using System.Text;
 using ArtcilesServer.Data;
-
+using ArtcilesServer.DTO;
 using ArtcilesServer.Mapper;
 using ArtcilesServer.Middlewares;
 using ArtcilesServer.Models;
 using ArtcilesServer.Repo;
 using ArtcilesServer.Services;
 using ArticlesServer.Services;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +23,8 @@ builder.Services.AddDbContext<DbConn>(options =>
 builder.Services.AddHealthChecks();
 builder.Services.AddScoped<GenericRepository<User>, GenericRepository<User>>();
 builder.Services.AddScoped<GenericRepository<Report>, GenericRepository<Report>>();
+builder.Services.AddScoped<GenericRepository<Hobby>, GenericRepository<Hobby>>();
+
 builder.Services.AddScoped<GenericRepository<Comment>, GenericRepository<Comment>>();
 builder.Services.AddScoped<GenericRepository<Article>, GenericRepository<Article>>();
 builder.Services.AddScoped<GenericRepository<Category>, GenericRepository<Category>>();

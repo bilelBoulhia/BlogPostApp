@@ -7,6 +7,8 @@
 
         public string UserFamilyName { get; set; } = null!;
 
+        public string? UserImage { get; set; }
+
         public int UserPhoneNumber { get; set; }
 
         public DateTime UserBirthDay { get; set; }

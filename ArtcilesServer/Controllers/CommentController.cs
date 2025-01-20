@@ -44,7 +44,7 @@ namespace ArtcilesServer.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred : {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, $"{ex.Message}");
             }
         }
 
@@ -97,9 +97,7 @@ namespace ArtcilesServer.Controllers
                     return NotFound("nothing found");
                 }
 
-                var foundArticles = _mapper.Map<List<CommentDTO>>(Result);
-
-                return Ok(foundArticles);
+                return Ok(Result);
             }
             catch (Exception ex)
             {
@@ -108,65 +106,9 @@ namespace ArtcilesServer.Controllers
 
         }
 
-        [HttpGet("GetCommentByArticle")]
-        public async Task<IActionResult> GetCommentByArticle([FromQuery] int articleId)
-        {
+     
 
-            try
-            {
-
-                var Result = await _commentRepo.GetCommentByArticle(articleId);
-
-                if (Result.Count <= 0)
-                {
-                    return NotFound("nothing found");
-                }
-
-                var foundComment = _mapper.Map<List<CommentDTO>>(Result);
-
-                return Ok(foundComment);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
-            }
-
-        }
-
-        [HttpGet("GetAllLikesOfaComment")]
-        public async Task<IActionResult> GetAllLikesOfaComment([FromQuery] int commentId)
-        {
-            try
-            {
-
-                var Result = await _commentRepo.getAllLikesOfaComment(commentId);
-
-                if (Result.Count <= 0)
-                {
-                    return NotFound("nothing found");
-                }
-
-                var foundLikes = _mapper.Map<List<UserDTO>>(Result);
-
-                return Ok(foundLikes);
-            }
-            catch (ArgumentException ex)
-            {
-
-                return BadRequest(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-
-                return Conflict(ex.Message);
-            }
-            catch (Exception ex)
-            {
-
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An error occurred: {ex.Message}");
-            }
-
-        }
+  
 
 
         [HttpPut("UpdateComment")]
